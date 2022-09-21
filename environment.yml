@@ -1,0 +1,17 @@
+name: hackathon
+channels:
+  - defaults
+dependencies:
+  - ipykernel
+  - pandas
+  - scikit-learn
+  - cycler
+  - kiwisolver
+  - libgcc
+  - gcc=12.1.0
+  - xgboost
+  - flask
+  - shap
+  - python=3.7
+  - seaborn
+prefix: /home/arno/anaconda3/envs/hackathon
