@@ -32,47 +32,87 @@ class Yscore:
         result = dict(zip(df_imp.feature, df_imp.importance))
         return result
 
+    # def improve_score(self, sample: np.ndarray, imp_dict, feat_names, feat_num=2):
+    #     # The function is very dirty and needs to be improved
+    #     """
+    #     :param sample: numpy array with user's data
+    #     :param imp_dict: dictionary with top impacting features and their weight (from feature_weigths function)
+    #     :param feat_num: number of top features you want to see impacting neg and pos the score
+    #     :return: sample of improved feature values, updated score (hopefully a higher one), % of score difference (hopefully not negative)
+    #     """
+    #     sample = pd.DataFrame(sample)
+    #     sample.columns=feat_names
+    #     sample_upd = sample.copy()
+    #     cur_score = self.model.predict(sample)
+    #     new_score = cur_score
+    #     if cur_score <= new_score:
+    #         for i, feat in enumerate(list(imp_dict.keys())):
+    #             print(feat)
+    #             print(list(imp_dict.values())[i])
+    #             print(sample[feat])
+    #             if i < feat_num:
+    #                 print(sample[feat])
+    #                 sample_upd[feat] = sample_upd[feat] + 1
+    #                 print(sample_upd[feat])
+    #             else:
+    #                 # if sample_upd[feat] != 0:
+    #                 print(sample[feat])
+    #                 sample_upd[feat] = sample_upd[feat] - 1
+    #                 print(sample_upd[feat])
+    #         new_score = self.model.predict(sample_upd)
+    #     score_diff = (new_score - cur_score) / new_score
+    #
+    #     return sample_upd, cur_score,  new_score, score_diff
+
+
     def improve_score(self, sample: np.ndarray, imp_dict, feat_names, feat_num=2):
-        # The function is very dirty and needs to be improved
-        """
-        :param sample: numpy array with user's data
-        :param imp_dict: dictionary with top impacting features and their weight (from feature_weigths function)
-        :param feat_num: number of top features you want to see impacting neg and pos the score
-        :return: sample of improved feature values, updated score (hopefully a higher one), % of score difference (hopefully not negative)
-        """
-        sample = pd.DataFrame(sample)
-        sample.columns=feat_names
-        sample_upd = sample.copy()
-        cur_score = self.model.predict(sample)
-        new_score = cur_score
-        if cur_score <= new_score:
-            for i, feat in enumerate(list(imp_dict.keys())):
-                print(feat)
-                if i < feat_num:
-                    print(sample[feat])
-                    sample_upd[feat] = sample_upd[feat] + 1
-                    print(sample_upd[feat])
-                else:
-                    # if sample_upd[feat] != 0:
-                    print(sample[feat])
-                    sample_upd[feat] = sample_upd[feat] - 1
-                    print(sample_upd[feat])
-            new_score = self.model.predict(sample_upd)
+        # (self, sample: np.ndarray, imp_dict, feat_names, feat_num=2)
+
+        data = pd.DataFrame(sample)
+        data.columns=feat_names
+
+        data_new = data.copy()
+
+        # if data['home_ownership_OWN'][0] != 0:
+        #     data_new['home_ownership_OWN'] = 1
+        #     data_new['home_ownership_MORTGAGE'] = 0
+        #     data_new['home_ownership_RENT'] = 0
+        #     data_new['home_ownership_OTHER'] = 0
+
+        if data['emp_length'][0] <= 1:
+            data_new['emp_length'] = 3
+        elif data['emp_length'][0] <= 4:
+            data_new['emp_length'] = 6
+        # else:
+        #     data_new['emp_length'] =
+        data_new['annual_inc'] = data['annual_inc'] + 3
+        # if data['annual_inc'][0] <= 1:
+        #     data_new['annual_inc'] = data['annual_inc'] +
+        # else:
+        #     data_new['annual_inc'] = data['annual_inc'] * 1.5
+
+        # if data['application_type_Individual'][0] == 1:
+        #     data_new['application_type_Individual'] = 0
+        #     data_new['application_type_Joint App'] = 1
+        data_new['delinq_2yrs'] = 0
+        cur_score = self.model.predict(data)
+        new_score = self.model.predict(data_new)
         score_diff = (new_score - cur_score) / new_score
 
-        return sample_upd, cur_score,  new_score, score_diff
-
+        return data_new, cur_score, new_score, score_diff
 
 if __name__ == '__main__':
     #  ------------testing--------------------------------------------
-    sample = np.array([[2, 1, 0, 3, 3, 7, 0, 0, 2, 0, 0, 0, 1, 1, 0]])
+    # sample = np.array([[2, 1, 0, 3, 3, 7, 0, 0, 2, 0, 0, 0, 1, 1, 0]])
+    sample = np.array([[ 2,  5,  0, -1,  0,  7,  3,  0,  1,  0,  0,  1,  0,  1,  0]])
     feats = ['emp_length', 'annual_inc', 'delinq_2yrs', 'mths_since_last_delinq',
            'tot_cur_bal', 'mo_sin_old_rev_tl_op', 'mo_sin_rcnt_rev_tl_op',
            'mort_acc', 'num_actv_bc_tl', 'home_ownership_MORTGAGE',
            'home_ownership_OTHER', 'home_ownership_OWN', 'home_ownership_RENT',
            'application_type_Individual', 'application_type_Joint App']
 
-    yscore = Yscore()
+    path = 'model/rfr_model.pkl'
+    yscore = Yscore(path)
     # print(feature_weigths(model, sample, feats))
     # print(model.predict(sample))
     imp_dict = yscore.feature_weigths(sample, feats)
