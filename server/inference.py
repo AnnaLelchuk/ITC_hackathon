@@ -9,12 +9,13 @@ with open("../model/xgbr_model.pkl", 'rb') as f:
 
 
 def format_input(form: pd.DataFrame):
-    columns = ["emp_length", "annual_inc", "delinq_2yrs", "mths_since_last_delinq", "tot_cur_bal",
-               "mo_sin_old_rev_tl_op", "mo_sin_rcnt_rev_tl_op", "mort_acc", "num_actv_bc_tl", "fico",
-               "home_ownership_MORTGAGE", "home_ownership_OTHER", "home_ownership_OWN", "home_ownership_RENT",
-               "application_type_Individual", "application_type_Joint App"]
-    df = pd.DataFrame(columns=columns)
+    columns = ['emp_length', 'annual_inc', 'delinq_2yrs', 'mths_since_last_delinq', 'tot_cur_bal',
+               'mo_sin_old_rev_tl_op', 'mo_sin_rcnt_rev_tl_op', 'mort_acc', 'num_actv_bc_tl',
+               'home_ownership_MORTGAGE', 'home_ownership_OTHER', 'home_ownership_OWN', 'home_ownership_RENT',
+               'application_type_Individual', 'application_type_Joint App']
     nominal = ['home_ownership', 'application_type']
+    numerical = ["emp_length", "annual_inc", "delinq_2yrs", "mths_since_last_delinq", "tot_cur_bal",
+                 "mo_sin_old_rev_tl_op", "mo_sin_rcnt_rev_tl_op", "mort_acc", "num_actv_bc_tl"]
     enum2name = {
         'home_ownership':
             {
@@ -26,19 +27,33 @@ def format_input(form: pd.DataFrame):
         'application_type':
             {
                 0: 'Individual',
-                1: 'Joint Application'
+                1: 'Joint App'
             }
     }
-    for column in nominal:
-        form[column] = form[column].map(enum2name[column])
+    input_dict = {col: 0 for col in columns}
 
-    form = pd.get_dummies(form, columns=nominal)
-    return form
+    for feature in numerical:
+        input_dict[feature] = int(form[feature].iloc[0])
+
+    for column in nominal:
+        feature = column + '_' + enum2name[column][int(form[column])]
+        input_dict[feature] = 1
+
+    df = pd.DataFrame(columns=columns)
+    df = df.append(input_dict, ignore_index=True)
+
+    return df.to_numpy()
+
+
+def round_prediction(prediction: float):
+    prediction = 10 * np.round(prediction/10)
+    return int(prediction)
 
 
 def predict(form: pd.DataFrame):
     form = format_input(form)
     prediction = model.predict(form)
+    prediction = round_prediction(prediction[0])
     return prediction
 
 

@@ -23,9 +23,12 @@ if __name__ == '__main__':
     }
 
     test_json = json.dumps(test_dict)
-    test_url = 'http://172.16.0.146:8080/score?application_type=0&home_ownership=1&mo_sin_rcnt_tl=2&' \
-               'mo_sin_old_rev_tl_op=5&num_actv_bc_tl=5&annual_inc=2&tot_cur_bal=3&emp_length=8&' \
-               'delinq_2yrs=5&mths_since_last_delinq=3&mort_acc=1'
+
+
+    test_url = 'http://172.16.0.146:8080/score?application_type=1&home_ownership=2&' \
+               'mo_sin_rcnt_rev_tl_op=1&mo_sin_old_rev_tl_op=0&num_actv_bc_tl=0&' \
+               'annual_inc=1&tot_cur_bal=1&emp_length=2&delinq_2yrs=3&' \
+               'mths_since_last_delinq=2&mort_acc=2'
     # print(requests.get(LOCALHOST))
     response = requests.get(test_url)
     print(response.text)
