@@ -12,7 +12,7 @@ def home():
 
 @app.get("/score")
 def get_score():
-    args = request.args
+    return 'Not implemented yet'
     
 
 if __name__ == '__main__':
