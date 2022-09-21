@@ -1,6 +1,5 @@
 from flask import Flask, request
-import json
-
+from inference import predict
 
 app = Flask(__name__)
 
@@ -12,7 +11,10 @@ def home():
 
 @app.get("/score")
 def get_score():
-    return 'Not implemented yet'
+    args = request.args
+    print(args)
+    prediction = predict()
+    return prediction
     
 
 if __name__ == '__main__':
