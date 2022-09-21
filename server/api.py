@@ -1,8 +1,11 @@
+import flask
 from flask import Flask, request
+import json
+import pandas as pd
 from inference import predict
 
 app = Flask(__name__)
-
+app.config['CORS_HEADERS'] = 'Content-Type'
 
 @app.get("/")
 def home():
@@ -11,10 +14,13 @@ def home():
 
 @app.get("/score")
 def get_score():
-    args = request.args
-    print(args)
-    prediction = predict()
-    return 'Not implemented yet'
+    data = request.args
+    form = pd.DataFrame(data, index=[0])
+    # prediction = predict(form)
+    message = "Received data and processing it later"
+    response = flask.jsonify({'data': message})
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
 
 
 if __name__ == '__main__':
