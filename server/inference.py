@@ -4,7 +4,7 @@ import pickle
 from xgboost import XGBRegressor
 
 
-with open("../model/xgbr_model.pkl", 'rb') as f:
+with open("model/xgbr_model.pkl", 'rb') as f:
     model: XGBRegressor = pickle.load(f)
 
 
