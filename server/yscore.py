@@ -72,7 +72,6 @@ class Yscore:
     def feature_weigths(self, sample: pd.DataFrame, top_feat_num=2):
         """
         :param sample: numpy array with user's data
-        :param feat_names: np array or list of features
         :param top_feat_num: number of top features you want to see impacting neg and pos the score
         :return: dictionary with top impacting features and their weight
         """
@@ -91,11 +90,12 @@ class Yscore:
         result = dict(zip(df_imp.feature, df_imp.importance))
         return self.round_dozen(score), result
 
-    def improve_score(self, sample: np.ndarray, feat_names, feat_num=2):
+    def improve_score(self, sample: pd.DataFrame):
         changes_dict = {}  # dictionary of updated personal parameters
 
-        data = pd.DataFrame(sample)
-        data.columns = feat_names
+        # data = pd.DataFrame(sample)
+        # data.columns = feat_names
+        data = self.format_input(sample)
         data_new = data.copy()
 
         # changing all features that make sense to be changed and writing to dictionary:
@@ -124,11 +124,11 @@ class Yscore:
 
 
         #calculating the difference of scores
-        cur_score = np.rint(self.model.predict(data))
+        # cur_score = np.rint(self.model.predict(data))
         new_score = np.rint(self.model.predict(data_new))
-        score_diff = new_score - cur_score
+        # score_diff = new_score - cur_score
         # return changes_dict, cur_score, new_score, score_diff, data, data_new
-        return changes_dict, cur_score, new_score
+        return changes_dict, self.round_dozen(new_score)
 
 # if __name__ == '__main__':
 #     # pd.set_option('max_columns', None)
