@@ -2,7 +2,6 @@ import flask
 from flask import Flask, request
 from yscore import Yscore
 import pandas as pd
-from inference import predict
 
 app = Flask(__name__)
 app.config['CORS_HEADERS'] = 'Content-Type'
