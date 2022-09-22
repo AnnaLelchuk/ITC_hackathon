@@ -3,10 +3,14 @@ import numpy as np
 import pickle
 from xgboost import XGBRegressor
 from yscore import Yscore
+from sklearn.ensemble import RandomForestRegressor
 
 
 with open("../model/xgbr_model.pkl", 'rb') as f:
     model: XGBRegressor = pickle.load(f)
+
+# with open("../model/rfr_model.pkl", 'rb') as f:
+#     model: RandomForestRegressor = pickle.load(f)
 
 
 def format_input(form: pd.DataFrame):

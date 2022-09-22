@@ -91,81 +91,88 @@ class Yscore:
         return self.round_dozen(score), result
 
     def improve_score(self, sample: pd.DataFrame):
-        changes_dict = {}  # dictionary of updated personal parameters
+        new_params_dict = {}  # dictionary of updated personal parameters
+        current_params_dict = {}
 
         data = sample.astype(int)
-        # data = pd.DataFrame(sample)
-        # data.columns = feat_names
-        # data = self.format_input(sample)
         data_new = data.copy()
 
         # changing all features that make sense to be changed and writing to dictionary:
         if data['emp_length'][0] < 10:
             data_new['emp_length'] += 1
-            changes_dict['emp_length'] = [data['emp_length'][0], data_new['emp_length'][0]]
+            current_params_dict['emp_length'] = data['emp_length'][0]
+            new_params_dict['emp_length'] = data_new['emp_length'][0]
 
         if data['annual_inc'][0] < 6:
             data_new['annual_inc'] += 1
-            changes_dict['annual_inc'] = [data['annual_inc'][0], data_new['annual_inc'][0]]
+            current_params_dict['annual_inc'] = data['annual_inc'][0]
+            new_params_dict['annual_inc'] = data_new['annual_inc'][0]
+
 
         if (data['mths_since_last_delinq'][0] != -1) & (data['mths_since_last_delinq'][0] < 4):
             data_new['mths_since_last_delinq'] += 1
-            changes_dict['mths_since_last_delinq'] = [data['mths_since_last_delinq'][0],
-                                                      data_new['mths_since_last_delinq'][0]]
+            current_params_dict['mths_since_last_delinq'] = data['mths_since_last_delinq'][0]
+            new_params_dict['mths_since_last_delinq'] = data_new['mths_since_last_delinq'][0]
 
         if data['tot_cur_bal'][0] < 9:
             data_new['tot_cur_bal'] += 1
-            changes_dict['tot_cur_bal'] = [data['tot_cur_bal'][0], data_new['tot_cur_bal'][0]]
+            current_params_dict['tot_cur_bal'] = data['tot_cur_bal'][0]
+            new_params_dict['tot_cur_bal'] = data_new['tot_cur_bal'][0]
 
         if data['mort_acc'][0] == 0:
             data_new['mort_acc'] = 1
+            current_params_dict['mort_acc'] = data['mort_acc'][0]
+            new_params_dict['mort_acc'] = data_new['mort_acc'][0]
 
         if data['delinq_2yrs'][0] > 0:
             data_new['delinq_2yrs'] = 0
+            current_params_dict['delinq_2yrs'] = data['delinq_2yrs'][0]
+            new_params_dict['delinq_2yrs'] = data_new['delinq_2yrs'][0]
 
 
         if data['application_type'][0] == 0:
             data_new['application_type'] = 1
-
+            current_params_dict['application_type'] = data['application_type'][0]
+            new_params_dict['application_type'] = data_new['application_type'][0]
 
         #calculating the difference of scores
         # cur_score = np.rint(self.model.predict(data))
         model_input_new = self.format_input(data_new)
         new_score = np.rint(self.model.predict(model_input_new))
-        # score_diff = new_score - cur_score
+        self.score_diff = new_score - cur_score
         # return changes_dict, cur_score, new_score, score_diff, data, data_new
-        return changes_dict, self.round_dozen(new_score)
+        return current_params_dict, new_params_dict, self.round_dozen(new_score), self.score_diff
 
-if __name__ == '__main__':
-    # pd.set_option('max_columns', None)
-    #  ------------testing--------------------------------------------
-    feats = ['emp_length', 'annual_inc', 'delinq_2yrs', 'mths_since_last_delinq',
-           'tot_cur_bal', 'mo_sin_old_rev_tl_op', 'mo_sin_rcnt_rev_tl_op',
-           'mort_acc', 'num_actv_bc_tl', 'home_ownership_MORTGAGE',
-           'home_ownership_OTHER', 'home_ownership_OWN', 'home_ownership_RENT',
-           'application_type_Individual', 'application_type_Joint App']
-
-    path = 'model/rfr_model.pkl'
-    yscore = Yscore(path)
-
-    samp_list = tst.samp_list
-    best_diff = 0
-    for idx, sample in enumerate(samp_list):
-        sample = np.array([sample])
-        # print(sample1)
-        imp_dict = yscore.feature_weigths(sample, feats)
-        # print(f'{imp_dict=}')
-
-        changes, cur_score, new_score, score_diff, data, new_data = yscore.improve_score(sample, feats)
-
-
-        # diff = math.ceil(new_score/10)*10 - math.ceil(cur_score/10)*10
-        # if diff > best_diff:
-        # if score_diff<= 0:
-        print(data.to_string())
-        print(f'now: {cur_score[0]}, potentially: {new_score[0]}, diff: {score_diff[0]}')
-        print(f'You current score is in range {math.floor((cur_score-0.01)/10)*10} - {math.ceil(cur_score/10)*10}. Your potential score is in range {math.floor(new_score/10)*10} - {math.ceil((new_score+0.01)/10)*10}')
-        print(f'{changes=}')
-        print(idx)
-        print()
-            # best_diff = diff
+# if __name__ == '__main__':
+#     # pd.set_option('max_columns', None)
+#     #  ------------testing--------------------------------------------
+#     feats = ['emp_length', 'annual_inc', 'delinq_2yrs', 'mths_since_last_delinq',
+#            'tot_cur_bal', 'mo_sin_old_rev_tl_op', 'mo_sin_rcnt_rev_tl_op',
+#            'mort_acc', 'num_actv_bc_tl', 'home_ownership_MORTGAGE',
+#            'home_ownership_OTHER', 'home_ownership_OWN', 'home_ownership_RENT',
+#            'application_type_Individual', 'application_type_Joint App']
+#
+#     path = 'model/rfr_model.pkl'
+#     yscore = Yscore(path)
+#
+#     samp_list = tst.samp_list
+#     best_diff = 0
+#     for idx, sample in enumerate(samp_list):
+#         sample = np.array([sample])
+#         # print(sample1)
+#         imp_dict = yscore.feature_weigths(sample, feats)
+#         # print(f'{imp_dict=}')
+#
+#         changes, cur_score, new_score, score_diff, data, new_data = yscore.improve_score(sample, feats)
+#
+#
+#         # diff = math.ceil(new_score/10)*10 - math.ceil(cur_score/10)*10
+#         # if diff > best_diff:
+#         # if score_diff<= 0:
+#         print(data.to_string())
+#         print(f'now: {cur_score[0]}, potentially: {new_score[0]}, diff: {score_diff[0]}')
+#         print(f'You current score is in range {math.floor((cur_score-0.01)/10)*10} - {math.ceil(cur_score/10)*10}. Your potential score is in range {math.floor(new_score/10)*10} - {math.ceil((new_score+0.01)/10)*10}')
+#         print(f'{changes=}')
+#         print(idx)
+#         print()
+#             # best_diff = diff

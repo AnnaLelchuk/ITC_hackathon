@@ -20,8 +20,16 @@ def get_score():
     form = pd.DataFrame(data, index=[0])
     print(yscore.improve_score(form))
 
-    score, weights = yscore.feature_weigths(form)
-    response_data = {'fico': str(score)}
+    score, important_params = yscore.feature_weigths(form)
+    current_params_dict, new_params_dict, new_score, score_diff = yscore.improve_score(form)
+
+    response_data = {'fico': str(score),
+                     'current_params': current_params_dict,
+                     'new_params': new_params_dict,
+                     'new_fico': str(new_score),
+                     'fico_diff': str(score_diff),
+                     'most_affecting_params': important_params
+                    }
     response = flask.jsonify(response_data)
     response.headers.add('Access-Control-Allow-Origin', '*')
     return response
