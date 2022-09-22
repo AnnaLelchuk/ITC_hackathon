@@ -4,7 +4,7 @@ from shap import TreeExplainer
 import pickle
 from xgboost import XGBRegressor
 import math
-import testing as tst
+import testing as tst #not in use in prod functions, for personal testing only (AL)
 
 
 class Yscore:
@@ -59,9 +59,12 @@ class Yscore:
             data_new['tot_cur_bal'] += 1
             changes_dict['tot_cur_bal'] = [data['tot_cur_bal'][0], data_new['tot_cur_bal'][0]]
 
-        if data['mort_acc'][0] > 0:
-            data_new['mort_acc'] -= 1
-            changes_dict['mort_acc'] = [data['mort_acc'][0], data_new['mort_acc'][0]]
+        if data['mort_acc'][0] == 0:
+            data_new['mort_acc'] = 1
+
+        if data['delinq_2yrs'][0] > 0:
+            data_new['delinq_2yrs'] = 0
+
 
         #calculating the difference of scores
         cur_score = np.rint(self.model.predict(data))
@@ -71,6 +74,7 @@ class Yscore:
         return changes_dict, cur_score, new_score
 
 # if __name__ == '__main__':
+#     # pd.set_option('max_columns', None)
 #     #  ------------testing--------------------------------------------
 #     feats = ['emp_length', 'annual_inc', 'delinq_2yrs', 'mths_since_last_delinq',
 #            'tot_cur_bal', 'mo_sin_old_rev_tl_op', 'mo_sin_rcnt_rev_tl_op',
@@ -82,15 +86,23 @@ class Yscore:
 #     yscore = Yscore(path)
 #
 #     samp_list = tst.samp_list
-#
-#     for sample in samp_list:
+#     best_diff = 0
+#     for idx, sample in enumerate(samp_list):
 #         sample = np.array([sample])
 #         # print(sample1)
 #         imp_dict = yscore.feature_weigths(sample, feats)
-#         changes, cur_score, new_score, score_diff, data, new_data = yscore.improve_score(sample, imp_dict, feats)
+#         # print(f'{imp_dict=}')
 #
-#         if math.ceil(new_score/10)*10 > math.ceil(cur_score/10)*10:
-#             print(f'now: {cur_score[0]}, potentially: {new_score[0]}')
+#         changes, cur_score, new_score, score_diff, data, new_data = yscore.improve_score(sample, feats)
+#
+#
+#         # diff = math.ceil(new_score/10)*10 - math.ceil(cur_score/10)*10
+#         # if diff > best_diff:
+#         if score_diff<= 0:
+#             print(data.to_string())
+#             print(f'now: {cur_score[0]}, potentially: {new_score[0]}, diff: {score_diff[0]}')
 #             print(f'You current score is in range {math.floor((cur_score-0.01)/10)*10} - {math.ceil(cur_score/10)*10}. Your potential score is in range {math.floor(new_score/10)*10} - {math.ceil((new_score+0.01)/10)*10}')
 #             print(f'{changes=}')
+#             print(idx)
 #             print()
+#             # best_diff = diff
