@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import pickle
 from xgboost import XGBRegressor
+from yscore import Yscore
 
 
 with open("../model/xgbr_model.pkl", 'rb') as f:
@@ -49,9 +50,14 @@ def round_prediction(prediction: float):
     prediction = 10 * np.round(prediction/10)
     return int(prediction)
 
-
+columns = ['emp_length', 'annual_inc', 'delinq_2yrs', 'mths_since_last_delinq', 'tot_cur_bal',
+               'mo_sin_old_rev_tl_op', 'mo_sin_rcnt_rev_tl_op', 'mort_acc', 'num_actv_bc_tl',
+               'home_ownership_MORTGAGE', 'home_ownership_OTHER', 'home_ownership_OWN', 'home_ownership_RENT',
+               'application_type_Individual', 'application_type_Joint App']
 def predict(form: pd.DataFrame):
     form = format_input(form)
+    yscore = Yscore("../model/xgbr_model.pkl")
+    yscore.feature_weigths(form, columns)
     prediction = model.predict(form)
     prediction = round_prediction(prediction[0])
     return prediction

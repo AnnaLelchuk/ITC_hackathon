@@ -1,12 +1,12 @@
 import flask
 from flask import Flask, request
-import json
+from yscore import Yscore
 import pandas as pd
 from inference import predict
 
 app = Flask(__name__)
 app.config['CORS_HEADERS'] = 'Content-Type'
-
+yscore = Yscore('../model/xgbr_model.pkl')
 
 @app.get("/")
 def home():
@@ -17,8 +17,8 @@ def home():
 def get_score():
     data = request.args
     form = pd.DataFrame(data, index=[0])
-    prediction = predict(form)
-    response = flask.jsonify({'fico': str(prediction)})
+    score, weights = yscore.feature_weigths(form)
+    response = flask.jsonify({'fico': str(score)})
     response.headers.add('Access-Control-Allow-Origin', '*')
     return response
 
