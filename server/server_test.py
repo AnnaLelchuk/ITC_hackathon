@@ -19,8 +19,8 @@ if __name__ == '__main__':
     application_type = [0, 1]
 
     test_dict = {
-            "emp_length": 7,
-            "annual_inc": 1,
+            "emp_length": 3,
+            "annual_inc": 2,
             "delinq_2yrs": 0,
             "mths_since_last_delinq": -1,
             "tot_cur_bal": 5,
@@ -29,7 +29,7 @@ if __name__ == '__main__':
             "mort_acc": 4,
             "num_actv_bc_tl": 1,
             "home_ownership": 2,
-            "application_type": 1
+            "application_type": 0
         }
 
     test_json = json.dumps(test_dict)

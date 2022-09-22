@@ -3,8 +3,6 @@ import pandas as pd
 from shap import TreeExplainer
 import pickle
 from xgboost import XGBRegressor
-import math
-import testing as tst
 
 
 class Yscore:
@@ -90,6 +88,10 @@ class Yscore:
         result = dict(zip(df_imp.feature, df_imp.importance))
         return self.round_dozen(score), result
 
+    def convert_int64toint_dict(self, d: dict):
+        return {k: int(v) for k, v in d.items()}
+
+
     def improve_score(self, sample: pd.DataFrame):
         new_params_dict = {}  # dictionary of updated personal parameters
         current_params_dict = {}
@@ -136,12 +138,16 @@ class Yscore:
             new_params_dict['application_type'] = data_new['application_type'][0]
 
         #calculating the difference of scores
-        # cur_score = np.rint(self.model.predict(data))
+        model_input_current = self.format_input(data)
+        cur_score = np.rint(self.model.predict(model_input_current)).astype(int)
+
         model_input_new = self.format_input(data_new)
-        new_score = np.rint(self.model.predict(model_input_new))
+        new_score = np.rint(self.model.predict(model_input_new)).astype(int)
         self.score_diff = new_score - cur_score
         # return changes_dict, cur_score, new_score, score_diff, data, data_new
-        return current_params_dict, new_params_dict, self.round_dozen(new_score), self.score_diff
+        current_params_dict = self.convert_int64toint_dict(current_params_dict)
+        new_params_dict = self.convert_int64toint_dict(new_params_dict)
+        return current_params_dict, new_params_dict, int(self.round_dozen(new_score)), int(self.score_diff)
 
 # if __name__ == '__main__':
 #     # pd.set_option('max_columns', None)

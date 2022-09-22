@@ -18,16 +18,15 @@ def home():
 def get_score():
     data = request.args
     form = pd.DataFrame(data, index=[0])
-    print(yscore.improve_score(form))
 
     score, important_params = yscore.feature_weigths(form)
     current_params_dict, new_params_dict, new_score, score_diff = yscore.improve_score(form)
 
-    response_data = {'fico': str(score),
+    response_data = {'fico': int(score),
                      'current_params': current_params_dict,
                      'new_params': new_params_dict,
-                     'new_fico': str(new_score),
-                     'fico_diff': str(score_diff),
+                     'new_fico': int(new_score),
+                     'fico_diff': int(score_diff),
                      'most_affecting_params': important_params
                     }
     response = flask.jsonify(response_data)
@@ -36,4 +35,4 @@ def get_score():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8080)
+    app.run(host='0.0.0.0', port=8080, debug=True)
