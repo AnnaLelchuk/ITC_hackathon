@@ -139,15 +139,15 @@ class Yscore:
 
         #calculating the difference of scores
         model_input_current = self.format_input(data)
-        cur_score = np.rint(self.model.predict(model_input_current)).astype(int)
+        cur_score = self.round_dozen(self.model.predict(model_input_current)[0])
 
         model_input_new = self.format_input(data_new)
-        new_score = np.rint(self.model.predict(model_input_new)).astype(int)
-        self.score_diff = new_score - cur_score
+        new_score = self.round_dozen(self.model.predict(model_input_new)[0])
+        score_diff = new_score - cur_score
         # return changes_dict, cur_score, new_score, score_diff, data, data_new
         current_params_dict = self.convert_int64toint_dict(current_params_dict)
         new_params_dict = self.convert_int64toint_dict(new_params_dict)
-        return current_params_dict, new_params_dict, int(self.round_dozen(new_score)), int(self.score_diff)
+        return current_params_dict, new_params_dict, int(self.round_dozen(new_score)), int(score_diff)
 
 # if __name__ == '__main__':
 #     # pd.set_option('max_columns', None)
