@@ -124,6 +124,10 @@ class Yscore:
             data_new['delinq_2yrs'] = 0
 
 
+        if data['application_type'][0] == 0:
+            data_new['application_type'] = 1
+
+
         #calculating the difference of scores
         # cur_score = np.rint(self.model.predict(data))
         model_input_new = self.format_input(data_new)
@@ -132,36 +136,36 @@ class Yscore:
         # return changes_dict, cur_score, new_score, score_diff, data, data_new
         return changes_dict, self.round_dozen(new_score)
 
-# if __name__ == '__main__':
-#     # pd.set_option('max_columns', None)
-#     #  ------------testing--------------------------------------------
-#     feats = ['emp_length', 'annual_inc', 'delinq_2yrs', 'mths_since_last_delinq',
-#            'tot_cur_bal', 'mo_sin_old_rev_tl_op', 'mo_sin_rcnt_rev_tl_op',
-#            'mort_acc', 'num_actv_bc_tl', 'home_ownership_MORTGAGE',
-#            'home_ownership_OTHER', 'home_ownership_OWN', 'home_ownership_RENT',
-#            'application_type_Individual', 'application_type_Joint App']
-#
-#     path = 'model/rfr_model.pkl'
-#     yscore = Yscore(path)
-#
-#     samp_list = tst.samp_list
-#     best_diff = 0
-#     for idx, sample in enumerate(samp_list):
-#         sample = np.array([sample])
-#         # print(sample1)
-#         imp_dict = yscore.feature_weigths(sample, feats)
-#         # print(f'{imp_dict=}')
-#
-#         changes, cur_score, new_score, score_diff, data, new_data = yscore.improve_score(sample, feats)
-#
-#
-#         # diff = math.ceil(new_score/10)*10 - math.ceil(cur_score/10)*10
-#         # if diff > best_diff:
-#         if score_diff<= 0:
-#             print(data.to_string())
-#             print(f'now: {cur_score[0]}, potentially: {new_score[0]}, diff: {score_diff[0]}')
-#             print(f'You current score is in range {math.floor((cur_score-0.01)/10)*10} - {math.ceil(cur_score/10)*10}. Your potential score is in range {math.floor(new_score/10)*10} - {math.ceil((new_score+0.01)/10)*10}')
-#             print(f'{changes=}')
-#             print(idx)
-#             print()
-#             # best_diff = diff
+if __name__ == '__main__':
+    # pd.set_option('max_columns', None)
+    #  ------------testing--------------------------------------------
+    feats = ['emp_length', 'annual_inc', 'delinq_2yrs', 'mths_since_last_delinq',
+           'tot_cur_bal', 'mo_sin_old_rev_tl_op', 'mo_sin_rcnt_rev_tl_op',
+           'mort_acc', 'num_actv_bc_tl', 'home_ownership_MORTGAGE',
+           'home_ownership_OTHER', 'home_ownership_OWN', 'home_ownership_RENT',
+           'application_type_Individual', 'application_type_Joint App']
+
+    path = 'model/rfr_model.pkl'
+    yscore = Yscore(path)
+
+    samp_list = tst.samp_list
+    best_diff = 0
+    for idx, sample in enumerate(samp_list):
+        sample = np.array([sample])
+        # print(sample1)
+        imp_dict = yscore.feature_weigths(sample, feats)
+        # print(f'{imp_dict=}')
+
+        changes, cur_score, new_score, score_diff, data, new_data = yscore.improve_score(sample, feats)
+
+
+        # diff = math.ceil(new_score/10)*10 - math.ceil(cur_score/10)*10
+        # if diff > best_diff:
+        # if score_diff<= 0:
+        print(data.to_string())
+        print(f'now: {cur_score[0]}, potentially: {new_score[0]}, diff: {score_diff[0]}')
+        print(f'You current score is in range {math.floor((cur_score-0.01)/10)*10} - {math.ceil(cur_score/10)*10}. Your potential score is in range {math.floor(new_score/10)*10} - {math.ceil((new_score+0.01)/10)*10}')
+        print(f'{changes=}')
+        print(idx)
+        print()
+            # best_diff = diff
