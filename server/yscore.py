@@ -93,9 +93,10 @@ class Yscore:
     def improve_score(self, sample: pd.DataFrame):
         changes_dict = {}  # dictionary of updated personal parameters
 
+        data = sample.astype(int)
         # data = pd.DataFrame(sample)
         # data.columns = feat_names
-        data = self.format_input(sample)
+        # data = self.format_input(sample)
         data_new = data.copy()
 
         # changing all features that make sense to be changed and writing to dictionary:
@@ -125,7 +126,8 @@ class Yscore:
 
         #calculating the difference of scores
         # cur_score = np.rint(self.model.predict(data))
-        new_score = np.rint(self.model.predict(data_new))
+        model_input_new = self.format_input(data_new)
+        new_score = np.rint(self.model.predict(model_input_new))
         # score_diff = new_score - cur_score
         # return changes_dict, cur_score, new_score, score_diff, data, data_new
         return changes_dict, self.round_dozen(new_score)
