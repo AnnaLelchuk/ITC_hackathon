@@ -3,6 +3,8 @@ import pandas as pd
 from shap import TreeExplainer
 import pickle
 from xgboost import XGBRegressor
+import math
+import testing as tst
 
 
 class Yscore:
@@ -32,90 +34,63 @@ class Yscore:
         result = dict(zip(df_imp.feature, df_imp.importance))
         return result
 
-    # def improve_score(self, sample: np.ndarray, imp_dict, feat_names, feat_num=2):
-    #     # The function is very dirty and needs to be improved
-    #     """
-    #     :param sample: numpy array with user's data
-    #     :param imp_dict: dictionary with top impacting features and their weight (from feature_weigths function)
-    #     :param feat_num: number of top features you want to see impacting neg and pos the score
-    #     :return: sample of improved feature values, updated score (hopefully a higher one), % of score difference (hopefully not negative)
-    #     """
-    #     sample = pd.DataFrame(sample)
-    #     sample.columns=feat_names
-    #     sample_upd = sample.copy()
-    #     cur_score = self.model.predict(sample)
-    #     new_score = cur_score
-    #     if cur_score <= new_score:
-    #         for i, feat in enumerate(list(imp_dict.keys())):
-    #             print(feat)
-    #             print(list(imp_dict.values())[i])
-    #             print(sample[feat])
-    #             if i < feat_num:
-    #                 print(sample[feat])
-    #                 sample_upd[feat] = sample_upd[feat] + 1
-    #                 print(sample_upd[feat])
-    #             else:
-    #                 # if sample_upd[feat] != 0:
-    #                 print(sample[feat])
-    #                 sample_upd[feat] = sample_upd[feat] - 1
-    #                 print(sample_upd[feat])
-    #         new_score = self.model.predict(sample_upd)
-    #     score_diff = (new_score - cur_score) / new_score
-    #
-    #     return sample_upd, cur_score,  new_score, score_diff
-
-
-    def improve_score(self, sample: np.ndarray, imp_dict, feat_names, feat_num=2):
-        # (self, sample: np.ndarray, imp_dict, feat_names, feat_num=2)
+    def improve_score(self, sample: np.ndarray, feat_names, feat_num=2):
+        changes_dict = {}  # dictionary of updated personal parameters
 
         data = pd.DataFrame(sample)
-        data.columns=feat_names
-
+        data.columns = feat_names
         data_new = data.copy()
 
-        # if data['home_ownership_OWN'][0] != 0:
-        #     data_new['home_ownership_OWN'] = 1
-        #     data_new['home_ownership_MORTGAGE'] = 0
-        #     data_new['home_ownership_RENT'] = 0
-        #     data_new['home_ownership_OTHER'] = 0
+        # changing all features that make sense to be changed and writing to dictionary:
+        if data['emp_length'][0] < 10:
+            data_new['emp_length'] += 1
+            changes_dict['emp_length'] = [data['emp_length'][0], data_new['emp_length'][0]]
 
-        if data['emp_length'][0] <= 1:
-            data_new['emp_length'] = 3
-        elif data['emp_length'][0] <= 4:
-            data_new['emp_length'] = 6
-        # else:
-        #     data_new['emp_length'] =
-        data_new['annual_inc'] = data['annual_inc'] + 3
-        # if data['annual_inc'][0] <= 1:
-        #     data_new['annual_inc'] = data['annual_inc'] +
-        # else:
-        #     data_new['annual_inc'] = data['annual_inc'] * 1.5
+        if data['annual_inc'][0] < 6:
+            data_new['annual_inc'] += 1
+            changes_dict['annual_inc'] = [data['annual_inc'][0], data_new['annual_inc'][0]]
 
-        # if data['application_type_Individual'][0] == 1:
-        #     data_new['application_type_Individual'] = 0
-        #     data_new['application_type_Joint App'] = 1
-        data_new['delinq_2yrs'] = 0
-        cur_score = self.model.predict(data)
-        new_score = self.model.predict(data_new)
-        score_diff = (new_score - cur_score) / new_score
+        if (data['mths_since_last_delinq'][0] != -1) & (data['mths_since_last_delinq'][0] < 4):
+            data_new['mths_since_last_delinq'] += 1
+            changes_dict['mths_since_last_delinq'] = [data['mths_since_last_delinq'][0],
+                                                      data_new['mths_since_last_delinq'][0]]
 
-        return data_new, cur_score, new_score, score_diff
+        if data['tot_cur_bal'][0] < 9:
+            data_new['tot_cur_bal'] += 1
+            changes_dict['tot_cur_bal'] = [data['tot_cur_bal'][0], data_new['tot_cur_bal'][0]]
 
-if __name__ == '__main__':
-    #  ------------testing--------------------------------------------
-    # sample = np.array([[2, 1, 0, 3, 3, 7, 0, 0, 2, 0, 0, 0, 1, 1, 0]])
-    sample = np.array([[ 2,  5,  0, -1,  0,  7,  3,  0,  1,  0,  0,  1,  0,  1,  0]])
-    feats = ['emp_length', 'annual_inc', 'delinq_2yrs', 'mths_since_last_delinq',
-           'tot_cur_bal', 'mo_sin_old_rev_tl_op', 'mo_sin_rcnt_rev_tl_op',
-           'mort_acc', 'num_actv_bc_tl', 'home_ownership_MORTGAGE',
-           'home_ownership_OTHER', 'home_ownership_OWN', 'home_ownership_RENT',
-           'application_type_Individual', 'application_type_Joint App']
+        if data['mort_acc'][0] > 0:
+            data_new['mort_acc'] -= 1
+            changes_dict['mort_acc'] = [data['mort_acc'][0], data_new['mort_acc'][0]]
 
-    path = 'model/rfr_model.pkl'
-    yscore = Yscore(path)
-    # print(feature_weigths(model, sample, feats))
-    # print(model.predict(sample))
-    imp_dict = yscore.feature_weigths(sample, feats)
-    # print(imp_dict)
-    print(yscore.improve_score(sample, imp_dict, feats))
-    # print(model)
+        #calculating the difference of scores
+        cur_score = np.rint(self.model.predict(data))
+        new_score = np.rint(self.model.predict(data_new))
+        score_diff = new_score - cur_score
+        # return changes_dict, cur_score, new_score, score_diff, data, data_new
+        return changes_dict, cur_score, new_score
+
+# if __name__ == '__main__':
+#     #  ------------testing--------------------------------------------
+#     feats = ['emp_length', 'annual_inc', 'delinq_2yrs', 'mths_since_last_delinq',
+#            'tot_cur_bal', 'mo_sin_old_rev_tl_op', 'mo_sin_rcnt_rev_tl_op',
+#            'mort_acc', 'num_actv_bc_tl', 'home_ownership_MORTGAGE',
+#            'home_ownership_OTHER', 'home_ownership_OWN', 'home_ownership_RENT',
+#            'application_type_Individual', 'application_type_Joint App']
+#
+#     path = 'model/rfr_model.pkl'
+#     yscore = Yscore(path)
+#
+#     samp_list = tst.samp_list
+#
+#     for sample in samp_list:
+#         sample = np.array([sample])
+#         # print(sample1)
+#         imp_dict = yscore.feature_weigths(sample, feats)
+#         changes, cur_score, new_score, score_diff, data, new_data = yscore.improve_score(sample, imp_dict, feats)
+#
+#         if math.ceil(new_score/10)*10 > math.ceil(cur_score/10)*10:
+#             print(f'now: {cur_score[0]}, potentially: {new_score[0]}')
+#             print(f'You current score is in range {math.floor((cur_score-0.01)/10)*10} - {math.ceil(cur_score/10)*10}. Your potential score is in range {math.floor(new_score/10)*10} - {math.ceil((new_score+0.01)/10)*10}')
+#             print(f'{changes=}')
+#             print()
