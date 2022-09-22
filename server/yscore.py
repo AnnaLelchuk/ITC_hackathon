@@ -3,36 +3,90 @@ import pandas as pd
 from shap import TreeExplainer
 import pickle
 from xgboost import XGBRegressor
-import math
-import testing as tst
 
 
 class Yscore:
+    columns = ['emp_length', 'annual_inc', 'delinq_2yrs', 'mths_since_last_delinq', 'tot_cur_bal',
+               'mo_sin_old_rev_tl_op', 'mo_sin_rcnt_rev_tl_op', 'mort_acc', 'num_actv_bc_tl',
+               'home_ownership_MORTGAGE', 'home_ownership_OTHER', 'home_ownership_OWN', 'home_ownership_RENT',
+               'application_type_Individual', 'application_type_Joint App']
+    nominal = ['home_ownership', 'application_type']
+    numerical = ["emp_length", "annual_inc", "delinq_2yrs", "mths_since_last_delinq", "tot_cur_bal",
+                 "mo_sin_old_rev_tl_op", "mo_sin_rcnt_rev_tl_op", "mort_acc", "num_actv_bc_tl"]
+
     def __init__(self, model_path):
         self.model_path = model_path
         self.model = self.load_model()
 
     def load_model(self):
+        """
+        Loads the model from a file
+        :return: xgboost regression model
+        """
         with open(self.model_path, 'rb') as f:
             xgb_model: XGBRegressor = pickle.load(f)
         return xgb_model
 
-    def feature_weigths(self, sample: np.ndarray, feat_names: list, top_feat_num=2):
+    def format_input(self, form: pd.DataFrame):
+        """
+        Formats the received form to an input expected by the model.
+        :param form: user input form
+        :return: numpy array to put in the model
+        """
+        enum2name = {
+            'home_ownership':
+                {
+                    0: "RENT",
+                    1: "MORTGAGE",
+                    2: "OWN",
+                    3: "OTHER"
+                },
+            'application_type':
+                {
+                    0: 'Individual',
+                    1: 'Joint App'
+                }
+        }
+        input_dict = {col: 0 for col in self.columns}
+
+        for feature in self.numerical:
+            input_dict[feature] = int(form[feature].iloc[0])
+
+        for column in self.nominal:
+            feature = column + '_' + enum2name[column][int(form[column])]
+            input_dict[feature] = 1
+
+        df = pd.DataFrame(columns=self.columns)
+        df = df.append(input_dict, ignore_index=True)
+
+        return df.to_numpy()
+
+    @staticmethod
+    def round_dozen(number: float):
+        "Rounds the given number to the dozens"
+        number = 10 * np.round(number / 10)
+        return int(number)
+
+    def feature_weigths(self, sample: pd.DataFrame, top_feat_num=2):
         """
         :param sample: numpy array with user's data
-        :param feat_names: np array or list of features
         :param top_feat_num: number of top features you want to see impacting neg and pos the score
         :return: dictionary with top impacting features and their weight
         """
+        model_input = self.format_input(sample)
+
+        score = self.model.predict(model_input)[0]
+
         explainer = TreeExplainer(self.model)
-        shap_values = explainer.shap_values(sample)
+        shap_values = explainer.shap_values(model_input)
+
         feat_imp = pd.DataFrame(np.around(shap_values, 5))
-        df_imp = pd.concat((pd.DataFrame(feat_names), feat_imp.T), axis=1)
+        df_imp = pd.concat((pd.DataFrame(self.columns), feat_imp.T), axis=1)
         df_imp.columns = ['feature', 'importance']
         df_imp.sort_values(by='importance', inplace=True, ascending=False)
         df_imp = pd.concat((df_imp.head(top_feat_num), df_imp.tail(top_feat_num)), axis=0)
         result = dict(zip(df_imp.feature, df_imp.importance))
-        return result
+        return self.round_dozen(score), result
 
     def improve_score(self, sample: np.ndarray, feat_names, feat_num=2):
         changes_dict = {}  # dictionary of updated personal parameters
