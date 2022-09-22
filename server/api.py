@@ -2,10 +2,23 @@ import flask
 from flask import Flask, request
 from yscore import Yscore
 import pandas as pd
+import argparse
+
+
+def get_path():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-p", "--prod", required=False, action="store_true", default=False, help="changes model path")
+    args = vars(parser.parse_args())
+    path = '../model/xgbr_model.pkl'
+    path = path.lstrip('../') if args['prod'] else path
+    return path
+
 
 app = Flask(__name__)
 app.config['CORS_HEADERS'] = 'Content-Type'
-yscore = Yscore('../model/xgbr_model.pkl')
+
+
+yscore = Yscore(get_path())
 
 
 @app.get("/")
